@@ -1,6 +1,6 @@
 {
 	"name": "baileys-bridge",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"private": true,
 	"type": "module",
 	"description": "Standalone REST/webhook bridge for a single WhatsApp account, built on this repo's Baileys library",
