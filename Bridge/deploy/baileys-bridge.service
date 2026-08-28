@@ -1,0 +1,20 @@
+[Unit]
+Description=Baileys WhatsApp REST bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# BRIDGE_DIR is replaced by deploy/setup.sh with the actual clone path (e.g. /home/idanudel/Baileys/Bridge)
+WorkingDirectory=__BRIDGE_DIR__
+EnvironmentFile=__BRIDGE_DIR__/.env
+ExecStart=__BRIDGE_DIR__/node_modules/.bin/tsx src/index.ts
+Restart=on-failure
+RestartSec=5
+MemoryMax=256M
+LogsDirectory=baileys-bridge
+StandardOutput=append:/var/log/baileys-bridge/baileys-bridge.log
+StandardError=append:/var/log/baileys-bridge/baileys-bridge.log
+
+[Install]
+WantedBy=multi-user.target
