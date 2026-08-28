@@ -2,6 +2,7 @@ import { Boom } from '@hapi/boom'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import QRCode from 'qrcode'
 import { isJidGroup, isLidUser, isPnUser } from '../../../src'
+import type { ActivityLog } from '../activityLog'
 import type { BridgeHandle } from '../socket'
 import { listChats, listGroups } from '../store'
 import type { SendMessageBody } from '../types'
@@ -10,6 +11,7 @@ export type RouteContext = {
 	req: IncomingMessage
 	res: ServerResponse
 	bridge: BridgeHandle
+	activityLog: ActivityLog
 }
 
 const readJsonBody = async (req: IncomingMessage): Promise<unknown> => {
@@ -30,7 +32,7 @@ const sendJson = (res: ServerResponse, statusCode: number, body: unknown) => {
 	res.end(JSON.stringify(body))
 }
 
-export const handleSendMessage = async ({ req, res, bridge }: RouteContext) => {
+export const handleSendMessage = async ({ req, res, bridge, activityLog }: RouteContext) => {
 	const body = (await readJsonBody(req)) as Partial<SendMessageBody>
 	if (!body.jid || !body.text) {
 		throw new Boom('jid and text are required', { statusCode: 400 })
@@ -40,8 +42,21 @@ export const handleSendMessage = async ({ req, res, bridge }: RouteContext) => {
 		throw new Boom(`invalid jid: ${body.jid}`, { statusCode: 400 })
 	}
 
-	await bridge.sendText(body.jid, body.text)
-	sendJson(res, 200, { ok: true })
+	const callerIp = req.socket.remoteAddress
+	try {
+		await bridge.sendText(body.jid, body.text)
+		activityLog.recordOutboundMessage({ to: body.jid, text: body.text, callerIp, ok: true })
+		sendJson(res, 200, { ok: true })
+	} catch (err) {
+		activityLog.recordOutboundMessage({
+			to: body.jid,
+			text: body.text,
+			callerIp,
+			ok: false,
+			error: err instanceof Error ? err.message : String(err)
+		})
+		throw err
+	}
 }
 
 export const handleListChats = ({ res }: RouteContext) => {

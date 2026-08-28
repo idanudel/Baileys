@@ -1,4 +1,7 @@
+import { makeActivityLog } from './activityLog'
 import { loadConfig } from './config'
+import { makeConfigStore } from './configStore'
+import { openDb } from './db'
 import { startServer } from './http/server'
 import { makeLogger } from './logger'
 import { startSocket } from './socket'
@@ -8,13 +11,17 @@ const main = async () => {
 	const config = loadConfig()
 	const logger = makeLogger(config)
 
-	if (!config.webhookUrls.length) {
-		logger.warn('WEBHOOK_URLS is empty - incoming messages will not be forwarded anywhere')
+	const db = openDb(config.dbPath)
+	const configStore = makeConfigStore(db)
+	const activityLog = makeActivityLog(db)
+
+	if (!configStore.getConfig().apiKey) {
+		logger.warn('no API key configured yet - set one at /admin before calling the REST API')
 	}
 
-	const webhooks = makeWebhookDispatcher(config.webhookUrls, logger)
-	const bridge = await startSocket(config, logger, webhooks)
-	const server = startServer(config, logger, bridge)
+	const webhooks = makeWebhookDispatcher(configStore, logger)
+	const bridge = await startSocket(config, logger, webhooks, activityLog)
+	const server = startServer(config, logger, bridge, configStore, activityLog)
 
 	const shutdown = () => {
 		logger.info('shutting down')
