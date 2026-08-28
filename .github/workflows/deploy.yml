@@ -31,10 +31,10 @@ jobs:
         # Bridge imports the library via a relative path (../../src), which
         # resolves the library's own runtime deps from the repo root's
         # node_modules - keep that in sync with yarn.lock on every deploy.
-        run: |
-          corepack enable
-          corepack prepare yarn@4.x --activate
-          yarn install --immutable
+        # `corepack yarn` runs the pinned packageManager version directly
+        # without installing global shims (`corepack enable` needs root to
+        # symlink into /usr/bin and fails under the runner's own user).
+        run: corepack yarn install --immutable
         working-directory: ${{ env.APP_DIR }}
 
       - name: Install bridge dependencies
