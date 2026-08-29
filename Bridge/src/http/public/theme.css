@@ -185,8 +185,16 @@ body {
 	color: var(--muted);
 }
 
+.table-scroll {
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	margin: -0.25rem;
+	padding: 0.25rem;
+}
+
 table {
 	width: 100%;
+	min-width: 640px;
 	border-collapse: collapse;
 }
 
@@ -312,4 +320,44 @@ button.primary:hover {
 	margin-top: 1rem;
 	font-size: 0.88rem;
 	color: var(--muted);
+}
+
+@media (max-width: 640px) {
+	.topbar {
+		flex-wrap: wrap;
+		padding: 0.75rem 1rem;
+		gap: 0.6rem;
+	}
+
+	.nav {
+		margin-left: 0;
+		gap: 1.1rem;
+		order: 3;
+		flex-basis: 100%;
+	}
+
+	.page {
+		margin: 1.25rem auto;
+		padding: 0 0.85rem 2rem;
+	}
+
+	.card {
+		padding: 1rem;
+	}
+
+	.stats {
+		grid-template-columns: 1fr 1fr;
+		gap: 0.6rem;
+	}
+
+	.stat {
+		padding: 0.8rem;
+		gap: 0.6rem;
+	}
+
+	.stat-icon {
+		width: 34px;
+		height: 34px;
+		font-size: 1rem;
+	}
 }

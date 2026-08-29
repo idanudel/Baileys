@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<title>Bridge activity</title>
+	<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 	<link rel="stylesheet" href="assets/theme.css" />
 </head>
 <body>
@@ -46,12 +48,14 @@
 		</div>
 
 		<div class="card">
-			<table>
-				<thead>
-					<tr><th>Time</th><th>Kind</th><th>From</th><th>To</th><th>Text</th><th>Status</th><th>Webhook deliveries</th></tr>
-				</thead>
-				<tbody id="rows"></tbody>
-			</table>
+			<div class="table-scroll">
+				<table>
+					<thead>
+						<tr><th>Time</th><th>Kind</th><th>From</th><th>To</th><th>Text</th><th>Status</th><th>Webhook deliveries</th></tr>
+					</thead>
+					<tbody id="rows"></tbody>
+				</table>
+			</div>
 		</div>
 	</div>
 

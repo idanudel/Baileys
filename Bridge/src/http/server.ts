@@ -18,7 +18,8 @@ const UNAUTHENTICATED_PATHS = new Set([
 	'/api/config',
 	'/api/activity',
 	'/assets/theme.css',
-	'/assets/theme.js'
+	'/assets/theme.js',
+	'/assets/favicon.svg'
 ])
 
 const isAuthorized = (req: IncomingMessage, url: URL, apiKey: string): boolean => {

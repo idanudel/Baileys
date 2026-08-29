@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url'
 
 const ASSETS: Record<string, { path: string; contentType: string }> = {
 	'/assets/theme.css': { path: './public/theme.css', contentType: 'text/css' },
-	'/assets/theme.js': { path: './public/theme.js', contentType: 'text/javascript' }
+	'/assets/theme.js': { path: './public/theme.js', contentType: 'text/javascript' },
+	'/assets/favicon.svg': { path: './public/favicon.svg', contentType: 'image/svg+xml' }
 }
 
 export const isStaticAsset = (pathname: string): boolean => pathname in ASSETS
