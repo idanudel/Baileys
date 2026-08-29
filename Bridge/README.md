@@ -9,7 +9,7 @@ this is a personal service, kept in its own `package.json`/`node_modules`.
 ```sh
 cd Bridge
 npm install
-cp .env.example .env   # set API_KEY, optionally WEBHOOK_URLS
+cp .env.example .env
 npm run dev
 ```
 
@@ -17,11 +17,29 @@ First run has no saved session: open `GET /qr` (see below) and scan with WhatsAp
 Credentials are then persisted to `AUTH_DIR` (default `./baileys_auth_info`, already
 covered by the repo's root `.gitignore`) so future restarts don't need a new scan.
 
+## Admin & dashboard
+
+- `GET /admin` — set the API key and webhook URLs at runtime, no restart needed.
+  `.env`'s `API_KEY`/`WEBHOOK_URLS` are only used to seed the database on the very
+  first run (empty `bridge.db`) — after that, `/admin` is the source of truth.
+- `GET /dashboard` — activity log: every inbound WhatsApp message with the outcome
+  of each webhook delivery attempt underneath it, and every outbound send requested
+  via `POST /messages` with the calling IP and success/failure. Polls every 5s.
+
+Both pages and their supporting `/api/config` and `/api/activity` endpoints are
+**unauthenticated** (no `x-api-key` needed) — intentional for LAN-only use, but it
+means anyone who can reach the bridge on your network can read or rotate the API
+key from `/admin`, which in turn controls access to the endpoints below. Put this
+behind LAN-only access (as configured) or add auth before exposing it more widely.
+
+Runtime config and the full activity history live in `DB_PATH` (default
+`./bridge.db`, a `node:sqlite` file — gitignored, no extra dependency).
+
 ## API
 
-All endpoints require the shared secret in an `x-api-key` header. `GET /qr` also
-accepts it as a `?key=` query param, since browsers can't set custom headers by just
-navigating to a URL.
+All endpoints below (not `/admin`/`/dashboard`) require the shared secret in an
+`x-api-key` header. `GET /qr` also accepts it as a `?key=` query param, since
+browsers can't set custom headers by just navigating to a URL.
 
 | Method | Path | Description |
 |---|---|---|

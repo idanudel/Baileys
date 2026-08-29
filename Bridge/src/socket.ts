@@ -6,6 +6,7 @@ import makeWASocket, {
 	useMultiFileAuthState,
 	type WASocket
 } from '../../src'
+import type { ActivityLog } from './activityLog'
 import type { Config } from './config'
 import type { Logger } from './logger'
 import { deleteChats, updateChats, updateGroups, upsertChats, upsertGroups } from './store'
@@ -18,7 +19,12 @@ export type BridgeHandle = {
 	getLatestQr: () => string | undefined
 }
 
-export const startSocket = async (config: Config, logger: Logger, webhooks: WebhookDispatcher): Promise<BridgeHandle> => {
+export const startSocket = async (
+	config: Config,
+	logger: Logger,
+	webhooks: WebhookDispatcher,
+	activityLog: ActivityLog
+): Promise<BridgeHandle> => {
 	const { state, saveCreds } = await useMultiFileAuthState(config.authDir)
 	const { version } = await fetchLatestBaileysVersion()
 
@@ -99,6 +105,7 @@ export const startSocket = async (config: Config, logger: Logger, webhooks: Webh
 					}
 
 					const text = msg.message.conversation ?? msg.message.extendedTextMessage?.text ?? undefined
+					const sender = msg.key.participant ?? msg.key.remoteJid
 					const payload: WebhookPayload = {
 						event: 'message',
 						timestamp: Date.now(),
@@ -106,13 +113,14 @@ export const startSocket = async (config: Config, logger: Logger, webhooks: Webh
 							id: msg.key.id ?? '',
 							chatId: msg.key.remoteJid,
 							fromMe: !!msg.key.fromMe,
-							sender: msg.key.participant ?? msg.key.remoteJid,
+							sender,
 							text,
 							type: text ? 'text' : 'other'
 						}
 					}
 
-					webhooks.dispatch(payload)
+					const messageId = activityLog.recordInboundMessage({ from: sender, to: msg.key.remoteJid, text })
+					webhooks.dispatch(payload, outcome => activityLog.recordWebhookDelivery(messageId, outcome))
 				}
 			}
 		})
