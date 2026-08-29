@@ -84,3 +84,14 @@ Once `deploy/setup.sh` has run and the self-hosted runner is registered (see
 `Bridge/**` (excluding doc-only changes) automatically pulls, reinstalls
 dependencies, and restarts the service via `.github/workflows/deploy.yml` — with a
 Pushover notification on success or failure.
+
+### External access
+
+Reachable externally at `https://idanudel.duckdns.org:8989/whatsapp-bridge/` via
+the shared nginx config on the Pi — see `deploy/nginx-snippet.conf` for the actual
+location blocks (kept in sync with what's deployed, not included by nginx
+directly). `/messages`, `/chats`, `/groups`, `/status`, `/qr` are reachable with
+just the `x-api-key` header, same as on the LAN; everything else (`/settings`,
+`/dashboard`, `/dashboard-example`, `/api/*`, `/assets/*`) additionally requires
+HTTP Basic auth (the shared `/etc/nginx/.htpasswd` login), since those have no
+app-level auth of their own.
