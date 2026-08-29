@@ -4,7 +4,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { fileURLToPath } from 'node:url'
 import type { ConfigStore } from '../configStore'
 
-const adminHtmlPath = fileURLToPath(new URL('./public/admin.html', import.meta.url))
+const settingsHtmlPath = fileURLToPath(new URL('./public/settings.html', import.meta.url))
 
 const readJsonBody = async (req: IncomingMessage): Promise<unknown> => {
 	const chunks: Buffer[] = []
@@ -15,8 +15,8 @@ const readJsonBody = async (req: IncomingMessage): Promise<unknown> => {
 	return chunks.length ? JSON.parse(Buffer.concat(chunks).toString('utf8')) : {}
 }
 
-export const handleAdminPage = async (res: ServerResponse) => {
-	const html = await readFile(adminHtmlPath, 'utf8')
+export const handleSettingsPage = async (res: ServerResponse) => {
+	const html = await readFile(settingsHtmlPath, 'utf8')
 	res.writeHead(200, { 'content-type': 'text/html' })
 	res.end(html)
 }

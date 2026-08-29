@@ -6,11 +6,12 @@ import type { Config } from '../config'
 import type { ConfigStore } from '../configStore'
 import type { Logger } from '../logger'
 import type { BridgeHandle } from '../socket'
-import { handleGetConfig, handleAdminPage, handleSetConfig } from './admin'
 import { handleDashboardPage, handleListActivity } from './dashboard'
 import { handleListChats, handleListGroups, handleQr, handleSendMessage, handleStatus } from './routes'
+import { handleGetConfig, handleSettingsPage, handleSetConfig } from './settings'
+import { handleStaticAsset, isStaticAsset } from './static'
 
-const UNAUTHENTICATED_PATHS = new Set(['/admin', '/dashboard', '/api/config', '/api/activity'])
+const UNAUTHENTICATED_PATHS = new Set(['/settings', '/dashboard', '/api/config', '/api/activity', '/assets/theme.css', '/assets/theme.js'])
 
 const isAuthorized = (req: IncomingMessage, url: URL, apiKey: string): boolean => {
 	if (!apiKey) {
@@ -34,8 +35,10 @@ export const startServer = (config: Config, logger: Logger, bridge: BridgeHandle
 					throw new Boom('invalid or missing api key', { statusCode: 401 })
 				}
 
-				if (req.method === 'GET' && url.pathname === '/admin') {
-					await handleAdminPage(res)
+				if (req.method === 'GET' && isStaticAsset(url.pathname)) {
+					await handleStaticAsset(res, url.pathname)
+				} else if (req.method === 'GET' && url.pathname === '/settings') {
+					await handleSettingsPage(res)
 				} else if (req.method === 'GET' && url.pathname === '/dashboard') {
 					await handleDashboardPage(res)
 				} else if (req.method === 'GET' && url.pathname === '/api/config') {

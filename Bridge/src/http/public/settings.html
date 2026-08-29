@@ -2,30 +2,35 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
-	<title>Bridge admin</title>
-	<style>
-		body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
-		label { display: block; margin-top: 1rem; font-weight: 600; }
-		input, textarea { width: 100%; box-sizing: border-box; padding: 0.5rem; font-family: monospace; margin-top: 0.25rem; }
-		textarea { height: 6rem; }
-		button { margin-top: 1.5rem; padding: 0.5rem 1.5rem; }
-		#status { margin-top: 1rem; }
-		nav a { margin-right: 1rem; }
-	</style>
+	<title>Bridge settings</title>
+	<link rel="stylesheet" href="/assets/theme.css" />
 </head>
 <body>
-	<nav><a href="/admin">Admin</a><a href="/dashboard">Dashboard</a></nav>
-	<h1>Bridge configuration</h1>
+	<div class="topbar">
+		<div class="brand">Baileys Bridge</div>
+		<nav class="nav">
+			<a href="/settings" class="active">Settings</a>
+			<a href="/dashboard">Dashboard</a>
+		</nav>
+		<button class="theme-toggle" onclick="toggleBridgeTheme()">🌓 Theme</button>
+	</div>
 
-	<label for="apiKey">API key (required by all clients calling /messages, /chats, /groups, /status, /qr)</label>
-	<input id="apiKey" type="text" autocomplete="off" />
+	<div class="page">
+		<h1>Configuration</h1>
 
-	<label for="webhookUrls">Webhook URLs (one per line, incoming messages are POSTed to each)</label>
-	<textarea id="webhookUrls"></textarea>
+		<div class="card">
+			<label for="apiKey">API key (required by all clients calling /messages, /chats, /groups, /status, /qr)</label>
+			<input id="apiKey" type="text" autocomplete="off" />
 
-	<button id="save">Save</button>
-	<div id="status"></div>
+			<label for="webhookUrls">Webhook URLs (one per line, incoming messages are POSTed to each)</label>
+			<textarea id="webhookUrls"></textarea>
 
+			<button id="save" class="primary">Save</button>
+			<div id="status"></div>
+		</div>
+	</div>
+
+	<script src="/assets/theme.js"></script>
 	<script>
 		const apiKeyEl = document.getElementById('apiKey')
 		const webhookUrlsEl = document.getElementById('webhookUrls')
