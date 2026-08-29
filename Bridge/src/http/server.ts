@@ -11,7 +11,15 @@ import { handleListChats, handleListGroups, handleQr, handleSendMessage, handleS
 import { handleGetConfig, handleSettingsPage, handleSetConfig } from './settings'
 import { handleStaticAsset, isStaticAsset } from './static'
 
-const UNAUTHENTICATED_PATHS = new Set(['/settings', '/dashboard', '/api/config', '/api/activity', '/assets/theme.css', '/assets/theme.js'])
+const UNAUTHENTICATED_PATHS = new Set([
+	'/settings',
+	'/dashboard',
+	'/dashboard-example',
+	'/api/config',
+	'/api/activity',
+	'/assets/theme.css',
+	'/assets/theme.js'
+])
 
 const isAuthorized = (req: IncomingMessage, url: URL, apiKey: string): boolean => {
 	if (!apiKey) {
@@ -39,7 +47,7 @@ export const startServer = (config: Config, logger: Logger, bridge: BridgeHandle
 					await handleStaticAsset(res, url.pathname)
 				} else if (req.method === 'GET' && url.pathname === '/settings') {
 					await handleSettingsPage(res)
-				} else if (req.method === 'GET' && url.pathname === '/dashboard') {
+				} else if (req.method === 'GET' && (url.pathname === '/dashboard' || url.pathname === '/dashboard-example')) {
 					await handleDashboardPage(res)
 				} else if (req.method === 'GET' && url.pathname === '/api/config') {
 					handleGetConfig(res, configStore)
