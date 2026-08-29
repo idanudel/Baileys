@@ -3,14 +3,14 @@
 <head>
 	<meta charset="utf-8" />
 	<title>Bridge activity</title>
-	<link rel="stylesheet" href="/assets/theme.css" />
+	<link rel="stylesheet" href="assets/theme.css" />
 </head>
 <body>
 	<div class="topbar">
 		<div class="brand">Baileys Bridge</div>
 		<nav class="nav">
-			<a href="/settings">Settings</a>
-			<a href="/dashboard" class="active">Dashboard</a>
+			<a href="settings">Settings</a>
+			<a href="dashboard" class="active">Dashboard</a>
 		</nav>
 		<button class="theme-toggle" onclick="toggleBridgeTheme()">🌓 Theme</button>
 	</div>
@@ -18,7 +18,7 @@
 	<div class="page">
 		<h1>Activity</h1>
 		<div class="card example-banner" id="exampleBanner" style="display:none; margin-bottom:1.5rem;">
-			Showing example data for preview — this isn't live activity. See the <a href="/dashboard">real dashboard</a>.
+			Showing example data for preview — this isn't live activity. See the <a href="dashboard">real dashboard</a>.
 		</div>
 
 		<div class="stats">
@@ -55,7 +55,7 @@
 		</div>
 	</div>
 
-	<script src="/assets/theme.js"></script>
+	<script src="assets/theme.js"></script>
 	<script>
 		const rowsEl = document.getElementById('rows')
 		const AVATAR_COLORS = ['#6c5ce7', '#ff5c93', '#12946b', '#e08e0b', '#2f80ed', '#d64545']
@@ -137,10 +137,10 @@
 			}
 		]
 
-		const isExample = location.pathname === '/dashboard-example'
+		const isExample = location.pathname.endsWith('/dashboard-example')
 
 		const refresh = async () => {
-			const res = await fetch('/api/activity')
+			const res = await fetch('api/activity')
 			render(await res.json())
 		}
 
