@@ -1,0 +1,76 @@
+name: Deploy Bridge to Pi
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "Bridge/**"
+      - "!Bridge/**.md"
+
+permissions:
+  contents: read
+
+env:
+  # Persistent clone on the Pi that the systemd service actually runs from -
+  # adjust this if the fork is cloned somewhere else on the Pi.
+  APP_DIR: /home/idanudel/dev/Baileys
+  BRIDGE_DIR: /home/idanudel/dev/Baileys/Bridge
+  # deploy notifications are developer-facing - sent only to this Pushover device
+  DEPLOY_NOTIFY_DEVICE: oneplus13
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Pull latest
+        # Authenticate with the run's ephemeral GITHUB_TOKEN - the deploy
+        # clone has no stored credentials for https://github.com
+        run: git -C $APP_DIR pull "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" master
+
+      - name: Install library dependencies
+        # Bridge imports the library via a relative path (../../src), which
+        # resolves the library's own runtime deps from the repo root's
+        # node_modules - keep that in sync with yarn.lock on every deploy.
+        # `corepack yarn` runs the pinned packageManager version directly
+        # without installing global shims (`corepack enable` needs root to
+        # symlink into /usr/bin and fails under the runner's own user).
+        run: corepack yarn install --immutable
+        working-directory: ${{ env.APP_DIR }}
+
+      - name: Install bridge dependencies
+        run: npm ci --omit=dev
+        working-directory: ${{ env.BRIDGE_DIR }}
+
+      - name: Restart service
+        run: sudo systemctl restart baileys-bridge
+
+      - name: Verify running
+        run: systemctl is-active baileys-bridge
+
+      # The runner is on the Pi, so the app's own Pushover keys are at hand -
+      # grep (not source: the .env contains URLs that break shell sourcing)
+      - name: Notify success
+        if: success()
+        run: |
+          TOKEN=$(grep -oP '^PUSHOVER_APP_TOKEN=\K.*' $BRIDGE_DIR/.env || true)
+          USER=$(grep -oP '^PUSHOVER_USER_KEY=\K.*' $BRIDGE_DIR/.env || true)
+          [ -n "$TOKEN" ] && [ -n "$USER" ] || { echo "Pushover keys not found - skipping notification"; exit 0; }
+          SHA=$(git -C $APP_DIR rev-parse --short HEAD)
+          MSG=$(git -C $APP_DIR log -1 --pretty=%s)
+          curl -s --form-string "token=$TOKEN" --form-string "user=$USER" \
+               --form-string "device=$DEPLOY_NOTIFY_DEVICE" \
+               --form-string "title=🚀 Baileys Bridge deploy OK" \
+               --form-string "message=Bridge $SHA deployed: $MSG" \
+               https://api.pushover.net/1/messages.json > /dev/null
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          TOKEN=$(grep -oP '^PUSHOVER_APP_TOKEN=\K.*' $BRIDGE_DIR/.env || true)
+          USER=$(grep -oP '^PUSHOVER_USER_KEY=\K.*' $BRIDGE_DIR/.env || true)
+          [ -n "$TOKEN" ] && [ -n "$USER" ] || { echo "Pushover keys not found - skipping notification"; exit 0; }
+          curl -s --form-string "token=$TOKEN" --form-string "user=$USER" \
+               --form-string "device=$DEPLOY_NOTIFY_DEVICE" \
+               --form-string "title=❌ Baileys Bridge deploy FAILED" \
+               --form-string "message=Bridge deploy of ${GITHUB_SHA::7} failed. Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+               https://api.pushover.net/1/messages.json > /dev/null

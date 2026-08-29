@@ -73,4 +73,14 @@ affect the WhatsApp connection itself.
 
 See `deploy/setup.sh` and `deploy/baileys-bridge.service` — installs a systemd unit
 that runs `tsx src/index.ts` directly (no build step), restarts on failure, and logs
-to `/var/log/baileys-bridge/baileys-bridge.log`.
+to `/var/log/baileys-bridge/baileys-bridge.log`. `setup.sh` also installs a
+passwordless sudoers rule so the service can be restarted non-interactively (needed
+for continuous deploy below).
+
+### Continuous deploy
+
+Once `deploy/setup.sh` has run and the self-hosted runner is registered (see
+`deploy/runner-setup.md`, one-time setup), every push to `master` touching
+`Bridge/**` (excluding doc-only changes) automatically pulls, reinstalls
+dependencies, and restarts the service via `.github/workflows/deploy.yml` — with a
+Pushover notification on success or failure.
