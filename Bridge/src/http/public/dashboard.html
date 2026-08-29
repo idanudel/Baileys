@@ -3,53 +3,99 @@
 <head>
 	<meta charset="utf-8" />
 	<title>Bridge activity</title>
-	<style>
-		body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-		nav a { margin-right: 1rem; }
-		table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-		th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #ddd; vertical-align: top; }
-		.ok { color: #0a7a2f; }
-		.err { color: #b3261e; }
-		.deliveries { font-size: 0.85em; color: #555; margin: 0; padding-left: 1rem; }
-		.kind-inbound { background: #f0f7ff; }
-		.kind-outbound { background: #fff8f0; }
-	</style>
+	<link rel="stylesheet" href="/assets/theme.css" />
 </head>
 <body>
-	<nav><a href="/settings">Settings</a><a href="/dashboard">Dashboard</a></nav>
-	<h1>Activity</h1>
-	<table>
-		<thead>
-			<tr><th>Time</th><th>Kind</th><th>From</th><th>To</th><th>Text</th><th>Status</th><th>Webhook deliveries</th></tr>
-		</thead>
-		<tbody id="rows"></tbody>
-	</table>
+	<div class="topbar">
+		<div class="brand">Baileys Bridge</div>
+		<nav class="nav">
+			<a href="/settings">Settings</a>
+			<a href="/dashboard" class="active">Dashboard</a>
+		</nav>
+		<button class="theme-toggle" onclick="toggleBridgeTheme()">🌓 Theme</button>
+	</div>
 
+	<div class="page">
+		<h1>Activity</h1>
+
+		<div class="stats">
+			<div class="stat">
+				<div class="stat-icon total">💬</div>
+				<div>
+					<div class="stat-value" id="statTotal">0</div>
+					<div class="stat-label">Total messages</div>
+				</div>
+			</div>
+			<div class="stat">
+				<div class="stat-icon sent">↑</div>
+				<div>
+					<div class="stat-value" id="statOutbound">0</div>
+					<div class="stat-label">Sent via API</div>
+				</div>
+			</div>
+			<div class="stat">
+				<div class="stat-icon received">↓</div>
+				<div>
+					<div class="stat-value" id="statInbound">0</div>
+					<div class="stat-label">Received from WhatsApp</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card">
+			<table>
+				<thead>
+					<tr><th>Time</th><th>Kind</th><th>From</th><th>To</th><th>Text</th><th>Status</th><th>Webhook deliveries</th></tr>
+				</thead>
+				<tbody id="rows"></tbody>
+			</table>
+		</div>
+	</div>
+
+	<script src="/assets/theme.js"></script>
 	<script>
 		const rowsEl = document.getElementById('rows')
-
-		const fmtTime = ts => new Date(ts).toLocaleString()
+		const AVATAR_COLORS = ['#6c5ce7', '#ff5c93', '#12946b', '#e08e0b', '#2f80ed', '#d64545']
 
 		const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({
 			'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 		}[c]))
 
+		const fmtTime = ts => new Date(ts).toLocaleString()
+
+		const avatarColor = label => {
+			let hash = 0
+			for (const ch of label) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
+			return AVATAR_COLORS[hash % AVATAR_COLORS.length]
+		}
+
+		const avatar = label => {
+			const safeLabel = label || '?'
+			const initial = esc(safeLabel.replace(/[^0-9a-zA-Z]/g, '').slice(0, 1).toUpperCase() || '?')
+			return `<span class="avatar" style="background:${avatarColor(safeLabel)}">${initial}</span>`
+		}
+
 		const render = rows => {
+			document.getElementById('statTotal').textContent = rows.length
+			document.getElementById('statOutbound').textContent = rows.filter(r => r.kind === 'outbound').length
+			document.getElementById('statInbound').textContent = rows.filter(r => r.kind === 'inbound').length
+
 			rowsEl.innerHTML = rows.map(row => {
-				const from = row.kind === 'inbound' ? row.waFrom : (row.callerIp ? `REST (${esc(row.callerIp)})` : 'REST')
+				const fromLabel = row.kind === 'inbound' ? (row.waFrom ?? '?') : (row.callerIp ? `REST (${row.callerIp})` : 'REST')
 				const to = esc(row.waTo ?? '')
+				const kindBadge = `<span class="badge ${row.kind}">${row.kind}</span>`
 				const status = row.ok
-					? '<span class="ok">ok</span>'
-					: `<span class="err">error${row.error ? ': ' + esc(row.error) : ''}</span>`
+					? '<span class="pill-ok">ok</span>'
+					: `<span class="pill-err">error${row.error ? ': ' + esc(row.error) : ''}</span>`
 				const deliveries = row.deliveries.length
 					? '<ul class="deliveries">' + row.deliveries.map(d =>
-						`<li>${esc(d.webhookUrl)} -> ${d.ok ? '<span class="ok">' + esc(d.statusCode ?? 'ok') + '</span>' : '<span class="err">' + esc(d.error ?? d.statusCode ?? 'error') + '</span>'} (${d.attempts} attempt${d.attempts === 1 ? '' : 's'})</li>`
+						`<li>${esc(d.webhookUrl)} -> ${d.ok ? '<span class="pill-ok">' + esc(d.statusCode ?? 'ok') + '</span>' : '<span class="pill-err">' + esc(d.error ?? d.statusCode ?? 'error') + '</span>'} (${d.attempts} attempt${d.attempts === 1 ? '' : 's'})</li>`
 					).join('') + '</ul>'
 					: ''
-				return `<tr class="kind-${esc(row.kind)}">
+				return `<tr>
 					<td>${esc(fmtTime(row.ts))}</td>
-					<td>${esc(row.kind)}</td>
-					<td>${esc(from)}</td>
+					<td>${kindBadge}</td>
+					<td>${avatar(fromLabel)}${esc(fromLabel)}</td>
 					<td>${to}</td>
 					<td>${esc(row.text ?? '')}</td>
 					<td>${status}</td>

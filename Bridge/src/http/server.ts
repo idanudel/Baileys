@@ -9,8 +9,9 @@ import type { BridgeHandle } from '../socket'
 import { handleDashboardPage, handleListActivity } from './dashboard'
 import { handleListChats, handleListGroups, handleQr, handleSendMessage, handleStatus } from './routes'
 import { handleGetConfig, handleSettingsPage, handleSetConfig } from './settings'
+import { handleStaticAsset, isStaticAsset } from './static'
 
-const UNAUTHENTICATED_PATHS = new Set(['/settings', '/dashboard', '/api/config', '/api/activity'])
+const UNAUTHENTICATED_PATHS = new Set(['/settings', '/dashboard', '/api/config', '/api/activity', '/assets/theme.css', '/assets/theme.js'])
 
 const isAuthorized = (req: IncomingMessage, url: URL, apiKey: string): boolean => {
 	if (!apiKey) {
@@ -34,7 +35,9 @@ export const startServer = (config: Config, logger: Logger, bridge: BridgeHandle
 					throw new Boom('invalid or missing api key', { statusCode: 401 })
 				}
 
-				if (req.method === 'GET' && url.pathname === '/settings') {
+				if (req.method === 'GET' && isStaticAsset(url.pathname)) {
+					await handleStaticAsset(res, url.pathname)
+				} else if (req.method === 'GET' && url.pathname === '/settings') {
 					await handleSettingsPage(res)
 				} else if (req.method === 'GET' && url.pathname === '/dashboard') {
 					await handleDashboardPage(res)
