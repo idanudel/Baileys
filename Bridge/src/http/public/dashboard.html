@@ -17,6 +17,9 @@
 
 	<div class="page">
 		<h1>Activity</h1>
+		<div class="card example-banner" id="exampleBanner" style="display:none; margin-bottom:1.5rem;">
+			Showing example data for preview — this isn't live activity. See the <a href="/dashboard">real dashboard</a>.
+		</div>
 
 		<div class="stats">
 			<div class="stat">
@@ -104,13 +107,50 @@
 			}).join('')
 		}
 
+		const EXAMPLE_ROWS = [
+			{
+				id: 4, kind: 'inbound', ts: Date.now() - 2 * 60 * 1000,
+				waFrom: '972501234567@s.whatsapp.net', waTo: '972509876543@s.whatsapp.net',
+				text: 'Hey, is the order ready for pickup?', ok: true,
+				deliveries: [
+					{ webhookUrl: 'https://crm.example.com/hooks/whatsapp', ok: true, statusCode: 200, attempts: 1 },
+					{ webhookUrl: 'https://backup.example.com/hooks/whatsapp', ok: false, attempts: 3, error: 'fetch failed' }
+				]
+			},
+			{
+				id: 3, kind: 'outbound', ts: Date.now() - 5 * 60 * 1000,
+				waTo: '972501234567@s.whatsapp.net', callerIp: '192.168.0.42',
+				text: 'Yes! Ready whenever you are 🎉', ok: true, deliveries: []
+			},
+			{
+				id: 2, kind: 'inbound', ts: Date.now() - 40 * 60 * 1000,
+				waFrom: '972502223344@s.whatsapp.net', waTo: '972509876543@s.whatsapp.net',
+				text: 'Do you have this in size M?', ok: true,
+				deliveries: [
+					{ webhookUrl: 'https://crm.example.com/hooks/whatsapp', ok: true, statusCode: 200, attempts: 1 }
+				]
+			},
+			{
+				id: 1, kind: 'outbound', ts: Date.now() - 3 * 60 * 60 * 1000,
+				waTo: '972505556677@s.whatsapp.net', callerIp: '192.168.0.55',
+				text: 'Reminder: appointment tomorrow at 10am', ok: false, error: 'not connected', deliveries: []
+			}
+		]
+
+		const isExample = location.pathname === '/dashboard-example'
+
 		const refresh = async () => {
 			const res = await fetch('/api/activity')
 			render(await res.json())
 		}
 
-		refresh()
-		setInterval(refresh, 5000)
+		if (isExample) {
+			document.getElementById('exampleBanner').style.display = 'block'
+			render(EXAMPLE_ROWS)
+		} else {
+			refresh()
+			setInterval(refresh, 5000)
+		}
 	</script>
 </body>
 </html>

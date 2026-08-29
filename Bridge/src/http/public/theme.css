@@ -118,6 +118,18 @@ body {
 	margin-top: 1.5rem;
 }
 
+.example-banner {
+	background: var(--accent-soft);
+	color: var(--accent);
+	font-size: 0.88rem;
+	padding: 0.85rem 1.25rem;
+}
+
+.example-banner a {
+	color: inherit;
+	font-weight: 700;
+}
+
 .stats {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
