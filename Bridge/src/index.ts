@@ -16,7 +16,7 @@ const main = async () => {
 	const activityLog = makeActivityLog(db)
 
 	if (!configStore.getConfig().apiKey) {
-		logger.warn('no API key configured yet - set one at /admin before calling the REST API')
+		logger.warn('no API key configured yet - set one at /settings before calling the REST API')
 	}
 
 	const webhooks = makeWebhookDispatcher(configStore, logger)
